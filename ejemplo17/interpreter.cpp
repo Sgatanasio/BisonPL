@@ -13,6 +13,8 @@
 	+ New statements: if, while, block
 */
 
+
+
 // New in example 2
 #include <stdio.h>
 #include <string>
@@ -77,6 +79,8 @@ extern jmp_buf begin; //!<  It enables recovery of runtime errors
 #include "table/table.hpp"
 
 lp::Table table; //!< Table of Symbols
+
+
 
 // cout.precision
 #include <iostream>

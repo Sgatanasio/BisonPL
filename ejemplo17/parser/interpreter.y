@@ -151,7 +151,7 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 
 /* Type of the non-terminal symbols */
 // New in example 17: cond
-%type <expNode> exp cond
+%type <expNode> exp cond 
 
 /* New in example 14 */
 %type <parameters> listOfExp  restOfListOfExp
@@ -159,7 +159,7 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 %type <stmts> stmtlist
 
 // New in example 17: if, while, block
-%type <st> stmt asgn print read read_string if while do_while repeat for block
+%type <st> stmt asgn print read if while block
 
 %type <prog> program
 
@@ -169,24 +169,20 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 
 /*******************************************/
 /* NEW in example 5 */
-%token SEMICOLON COMMA
+%token SEMICOLON
 /*******************************************/
 
 /* NEW in example 17: IF, ELSE, WHILE */
-%token PRINT READ READ_STRING
-%token IF THEN ELSE END_IF
-%token WHILE DO END_WHILE
-%token REPEAT UNTIL 
-%token FOR FROM STEP END_FOR 
-%token WHICH CASE DEFAULT END_WHICH 
-
-%token CLR_SCR PLACE
+%token PRINT READ IF ELSE WHILE 
 
 /* NEW in example 17 */
 %token LETFCURLYBRACKET RIGHTCURLYBRACKET
 
 /* NEW in example 7 */
 %right ASSIGNMENT
+
+/* NEW in example 14 */
+%token COMMA
 
 /*******************************************/
 /* MODIFIED in example 4 */
@@ -197,8 +193,6 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 /* NEW in example 15 */
 %token <logic> BOOL
 /*******************************************/
-
-%token <string> STRING
 
 /* MODIFIED in examples 11, 13 */
 %token <string> VARIABLE UNDEFINED CONSTANT BUILTIN
@@ -220,11 +214,9 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 %left PLUS MINUS 
 
 /* MODIFIED in example 5 */
-%left MULTIPLICATION DIVISION INT_DIVISION MODULO
+%left MULTIPLICATION DIVISION MODULO
 
 %left LPAREN RPAREN
-
-%left CONCAT
 
 %nonassoc  UNARY
 
@@ -311,10 +303,6 @@ stmt: SEMICOLON  /* Empty statement: ";" */
 		// Default action
 		// $$ = $1;
 	  }
-  | read_string SEMICOLON 
-    {
-
-    }
 	/*  NEW in example 17 */
 	| if 
 	 {
@@ -327,20 +315,8 @@ stmt: SEMICOLON  /* Empty statement: ";" */
 		// Default action
 		// $$ = $1;
 	 }
-  | do_while
-  {
-
-  }
-  |for 
-  {
-
-  }
-  | repeat
-  {
-
-  }
 	/*  NEW in example 17 */
-	| block
+	| block 
 	 {
 		// Default action
 		// $$ = $1;
@@ -355,8 +331,6 @@ block: LETFCURLYBRACKET stmtlist RIGHTCURLYBRACKET
 		}
 ;
 
-
-
 controlSymbol:  /* Epsilon rule*/
 		{
 			// To control the interactive mode in "if" and "while" sentences
@@ -366,20 +340,20 @@ controlSymbol:  /* Epsilon rule*/
 
 	/*  NEW in example 17 */
 if:	/* Simple conditional statement */
-	IF controlSymbol cond THEN stmtlist END_IF
+	IF controlSymbol cond stmt 
     {
 		// Create a new if statement node
-		$$ = new lp::IfStmt($3, new lp::BlockStmt($5));
+		$$ = new lp::IfStmt($3, $4);
 
 		// To control the interactive mode
 		control--;
-	  }
+	}
 
 	/* Compound conditional statement */
-	| IF controlSymbol cond THEN stmtlist ELSE stmtlist END_IF
+	| IF controlSymbol cond stmt  ELSE stmt 
 	 {
 		// Create a new if statement node
-		$$ = new lp::IfStmt($3, new lp::BlockStmt($5), new lp::BlockStmt($7));
+		$$ = new lp::IfStmt($3, $4, $6);
 
 		// To control the interactive mode
 		control--;
@@ -387,41 +361,15 @@ if:	/* Simple conditional statement */
 ;
 
 	/*  NEW in example 17 */
-while:  WHILE controlSymbol cond DO stmtlist END_WHILE
+while:  WHILE controlSymbol cond stmt 
 		{
 			// Create a new while statement node
-			$$ = new lp::WhileStmt($3, new lp::BlockStmt($5));
+			$$ = new lp::WhileStmt($3, $4);
 
 			// To control the interactive mode
 			control--;
     }
 ;
-
-do_while: DO controlSymbol LETFCURLYBRACKET stmtlist RIGHTCURLYBRACKET WHILE cond SEMICOLON
-        {
-          $$ = new lp::DoWhileStmt(new lp::BlockStmt($4),$7);
-          control--;
-        }
-;
-
-repeat: REPEAT controlSymbol stmtlist UNTIL cond SEMICOLON
-      {
-        $$ = new lp::DoWhileStmt(new lp::BlockStmt($3), new lp::NotNode($5));
-        control--;
-      }
-;
-
-for   : FOR controlSymbol VARIABLE FROM exp UNTIL exp DO stmtlist END_FOR
-      {
-        $$ = new lp::ForStmt($3,$5,$7,new lp::BlockStmt($9));
-        control--;
-      }
-      | FOR controlSymbol VARIABLE FROM exp UNTIL exp STEP exp DO stmtlist END_FOR
-      {
-        $$ = new lp::ForStmt($3,$5,$7,$9,new lp::BlockStmt($11));
-        control--;
-      }
-
 
 	/*  NEW in example 17 */
 cond: 	LPAREN exp RPAREN
@@ -475,25 +423,13 @@ read:  READ LPAREN VARIABLE RPAREN
 		}
 ;
 
-read_string : READ_STRING LPAREN VARIABLE RPAREN
-            {
-              $$ = new lp::ReadStringStmt($3);
-            }
-            | READ_STRING LPAREN CONSTANT RPAREN
-            {
-              execerror("Error semántico en \"read_string\": No se puede modificar una constante",$3);
-            }
-;
 
 exp:	NUMBER 
 		{ 
 			// Create a new number node
 			$$ = new lp::NumberNode($1);
 		}
-  |   STRING 
-    {
-      $$ = new lp::StringNode($1);
-    }
+
 	| 	exp PLUS exp 
 		{ 
 			// Create a new plus node
@@ -517,10 +453,7 @@ exp:	NUMBER
 		  // Create a new division node	
 		  $$ = new lp::DivisionNode($1, $3);
 	   }
-  |  exp CONCAT exp
-    {
-      $$ = new lp::ConcatenationNode($1,$3);
-    }
+
 	| 	LPAREN exp RPAREN
        	{ 
 		    // just copy up the expression node 

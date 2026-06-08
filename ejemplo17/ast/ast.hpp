@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <string>
 #include <list>
-#include <system_error>
 
 
 #define ERROR_BOUND 1.0e-6  //!< Error bound for the comparison of real numbers.
@@ -70,9 +69,6 @@ namespace lp
 		return false;
 	}
 
-    virtual std::string evaluateString(){
-      return "";
-    }
 };
 
 
@@ -130,7 +126,6 @@ class VariableNode : public ExpNode
 	*/
 	  bool evaluateBool();
 
-    std::string evaluateString();
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -239,19 +234,7 @@ class NumberNode : public ExpNode
 	double evaluateNumber();
 };
 
-class StringNode : public ExpNode{
-  private:
-    std::string _value;
-  public:
-    StringNode(std::string value){ 
-      this->_value = value; 
-    }
 
-    int getType();
-    void printAST();
-
-    std::string evaluateString();
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -570,12 +553,6 @@ class LogicalOperatorNode : public OperatorNode
 	int getType();
 };
 
-class StringOperatorNode : public OperatorNode{
-  public:
-    StringOperatorNode(ExpNode * L, ExpNode * R): OperatorNode(L,R){}
-    int getType();
-};
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -731,13 +708,6 @@ class DivisionNode : public NumericOperatorNode
 	\sa		   printAST
 */
   double evaluateNumber();
-};
-
-class ConcatenationNode : public StringOperatorNode{
-  public:
-  ConcatenationNode(ExpNode * L, ExpNode * R) : StringOperatorNode(L,R){}
-  void printAST();
-  std::string evaluateString();
 };
 
 
@@ -1551,19 +1521,6 @@ class ReadStmt : public Statement
   void evaluate();
 };
 
-class ReadStringStmt : public Statement{
-  private:
-    std::string _id;
-
-  public:
-  ReadStringStmt(std::string id){
-    this->_id = id;
-  }
-
-  void printAST();
-  void evaluate();
-};
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1718,47 +1675,7 @@ class WhileStmt : public Statement
   void evaluate();
 };
 
-class DoWhileStmt : public Statement{
-  private: 
-    Statement * _stmt;
-    ExpNode * _cond;
-  public:
-    DoWhileStmt(Statement * statement, ExpNode * condition){
-      this->_cond = condition;
-      this->_stmt = statement;
-    }
 
-    void printAST();
-    void evaluate();
-};
-
-class ForStmt : public Statement{
-  private:
-    std::string _var;
-    ExpNode * _from;
-    ExpNode * _to;
-    ExpNode * _step;
-    Statement * _stmt;
-  public: 
-    ForStmt(std::string var, ExpNode * from, ExpNode * to, ExpNode * step, Statement * stmt){
-      this->_var = var;
-      this->_from = from;
-      this->_to = to;
-      this->_step = step;
-      this->_stmt = stmt;
-    }
-
-    ForStmt(std::string var, ExpNode * from, ExpNode * to, Statement * stmt){
-      this->_var = var;
-      this->_from = from;
-      this->_to = to;
-      this->_step = new NumberNode(1.0);
-      this->_stmt = stmt;
-    }
-
-    void printAST();
-    void evaluate();
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////

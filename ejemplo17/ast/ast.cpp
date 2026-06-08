@@ -27,7 +27,6 @@
 // 
 #include "../table/numericVariable.hpp"
 #include "../table/logicalVariable.hpp"
-#include "../table/stringVariable.hpp"
 
 #include "../table/numericConstant.hpp"
 #include "../table/logicalConstant.hpp"
@@ -117,19 +116,7 @@ bool lp::VariableNode::evaluateBool()
 	return result;
 }
 
-std::string lp::VariableNode::evaluateString(){
-  
-  std::string result = "";
 
-  if(this->getType() == STRING){
-    lp::StringVariable * var = (lp::StringVariable *) table.getSymbol(this->_id);
-    result = var->getValue();
-  }else{
-    warning("Runtime error in evaluateString(): the variable is not a string", this->_id);
-  }
-
-  return result;
-}
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -214,17 +201,6 @@ double lp::NumberNode::evaluateNumber()
     return this->_number; 
 }
 
-int lp::StringNode::getType(){
-  return STRING;
-}
-
-void lp::StringNode::printAST(){
-  std::cout << "StringNode: " << this->_value << std::endl;
-}
-
-std::string lp::StringNode::evaluateString(){
-  return this->_value;
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -314,17 +290,6 @@ int lp::LogicalOperatorNode:: getType()
 		warning("Runtime error: incompatible types for", "Logical Operator");
 
 	return	result;
-}
-
-int lp::StringOperatorNode::getType(){
-  int result = 0;
-
-  if((this->_left->getType() == STRING) and (this->_right->getType() == STRING)){
-    result = STRING;
-  }else{
-    warning("Runtime error: Tipos incompatibles para", "StringOperator");
-  }
-  return result;
 }
 
 
@@ -520,28 +485,7 @@ double lp::DivisionNode::evaluateNumber()
   return result;
 }
 
-void lp::ConcatenationNode::printAST(){
-  std::cout << "ConcatenationNode: ||" << std::endl;
-  std::cout << "\t";
-  this->_left->printAST();
-  std::cout << "\t";
-  this->_right->printAST();
-}
 
-std::string lp::ConcatenationNode::evaluateString(){
-  std::string result = "";
-
-  if(this->getType() == STRING){
-    std::string leftString = this->_left->evaluateString();
-    std::string rightString = this->_right->evaluateString();
-
-    result = leftString + rightString;
-  }else{
-    warning("Runtime error: Las expresiones no son numéricas para ", "Concatenación");
-  }
-
-  return result; 
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1163,21 +1107,6 @@ void lp::AssignmentStmt::evaluate()
 				}
 			}
 			break;
-      
-      case STRING:
-      {
-        std::string value = this->_exp->evaluateString();
-
-        if(firstVar->getType() == STRING){
-          lp::StringVariable * v = (lp::StringVariable *) table.getSymbol(this->_id);
-          v->setValue(value);
-        }else{
-          table.eraseSymbol(this->_id);
-          lp::StringVariable * v = new lp::StringVariable(this->_id,VARIABLE,STRING,value);
-          table.installSymbol(v);
-        }
-      }
-        break;
 
 			default:
 				warning("Runtime error: incompatible type of expression for ", "Assigment");
@@ -1300,10 +1229,7 @@ void lp::PrintStmt::evaluate()
 				std::cout << "false" << std::endl;
 		
 			break;
-    
-    case STRING:
-        std::cout << this->_exp->evaluateString() << std::endl;
-      break;
+
 		default:
 			warning("Runtime error: incompatible type for ", "print");
 	}
@@ -1355,32 +1281,6 @@ void lp::ReadStmt::evaluate()
 
 		table.installSymbol(n);
 	}
-}
-
-void lp::ReadStringStmt::printAST(){
-  std::cout << "ReadStringStmt: readString"  << std::endl;
-  std::cout << "\t";
-  std::cout << this->_id;
-  std::cout << std::endl;
-}
-
-void lp::ReadStringStmt::evaluate(){
-  std::string value;
-  std::cout << BIYELLOW;
-  std::cout << "Introduzca una cadena --> ";
-  std::cout << RESET;
-  std::cin >> value;
-
-  lp::Variable * var = (lp::Variable *) table.getSymbol(this->_id);
-
-  if(var->getType() == STRING){
-    lp::StringVariable * n = (lp::StringVariable *) table.getSymbol(this->_id); 
-    n->setValue(value);
-  }else{
-    table.eraseSymbol(this->_id);
-    lp::StringVariable * n = new lp::StringVariable(this->_id,VARIABLE,STRING,value);
-    table.installSymbol(n);
-  }
 }
 
 
@@ -1457,6 +1357,7 @@ void lp::WhileStmt::printAST()
   std::cout << std::endl;
 }
 
+
 void lp::WhileStmt::evaluate() 
 {
   // While the condition is true. the body is run 
@@ -1467,65 +1368,9 @@ void lp::WhileStmt::evaluate()
 
 }
 
-void lp::DoWhileStmt::printAST(){
-  std::cout << "DoWhileStmt: " << std::endl << "\t";
-  this->_cond->printAST();
-  std::cout << "\t";
-  this->_stmt->printAST();
-  std::cout <<std::endl;
-}
 
-void lp::DoWhileStmt::evaluate(){
-  do {
-    this->_stmt->evaluate();
-  }while(this->_cond->evaluateBool());
-}
 
-void lp::ForStmt::printAST(){
-  std::cout << "ForStmt: " << std::endl << this->_var << "\t";
-  std::cout << "\t";
-  this->_from->printAST();
-  std::cout << "\t";
-  this->_to->printAST();
-  std::cout << "\t";
-  this->_step->printAST();
-  std::cout << "\t";
-  this->_stmt->printAST();
-  std::cout << std::endl;
-}
 
-void lp::ForStmt::evaluate(){
-
-  double start = _from->evaluateNumber();
-    double end = _to->evaluateNumber();
-    double step = (_step != nullptr) ? _step->evaluateNumber() : 1.0;
-    
-    if( std::abs(std::fmod((end - start),step)) > ERROR_BOUND || (end - start) < 0){
-      std::cout << BIRED;
-      std::cout << "ForStmt: WARNING: Infinite Loop" << RESET << std::endl;
-      return;
-    } 
-
-    for (double i = start; i != end; i += step) {
-      // Store in symbol table   
-
-      lp::Variable * v = (Variable *) table.getSymbol(this->_var);
-      
-      if(v->getType() == NUMBER){
-        lp::NumericVariable * var = (lp::NumericVariable *) table.getSymbol(this->_var);
-        var->setValue(i);
-      }else{
-        table.eraseSymbol(this->_var);
-        lp::NumericVariable * var = new lp::NumericVariable(_var,VARIABLE,NUMBER,i);
-        table.installSymbol(var);
-      }
-
-      _stmt->evaluate();
-    }
-    
-
-    
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////

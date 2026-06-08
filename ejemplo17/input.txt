@@ -1,4 +1,0 @@
-para a desde 1 hasta 5 hacer
-  escribir(a);
-fin_para
-

@@ -70,30 +70,12 @@ static struct {
           std::string name ;
 	      int token;
 	      } keyword[] = { 
-	          {"escribir", PRINT},
-	          {"leer",  READ},
-            {"leer_cadena", READ_STRING},
-						{"si",	  IF},   	// NEW in example 17
-            {"entonces", THEN},
-            {"si_no",  ELSE}, 	// NEW in example 17
-            {"fin_si", END_IF},
-						{"mientras", WHILE},	// NEW in example 17
-            {"hacer", DO},
-            {"fin_mientras",END_WHILE},
-            {"repetir", REPEAT},
-            {"hasta", UNTIL},
-            {"para", FOR},
-            {"fin_para",END_FOR},
-            {"desde", FROM},
-            {"paso", STEP},
-            {"selector",WHICH},
-            {"caso", CASE},
-            {"defecto",DEFAULT},
-            {"fin_selector",END_WHICH},
-            {"borrar_pantalla", CLR_SCR},
-            {"lugar", PLACE},
-	          {"",      0},
-            {}
+	                    {"print", PRINT},
+	                    {"read",  READ},
+						{"if",	  IF},   	// NEW in example 17
+						{"else",  ELSE}, 	// NEW in example 17
+						{"while", WHILE},	// NEW in example 17
+	                    {"",      0}
 	                   };
 
 
