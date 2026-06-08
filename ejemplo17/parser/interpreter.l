@@ -1,3 +1,5 @@
+%option case-insensitive
+
 /*! 
   \file interpreter.l
   \brief Lexical or scanner file
@@ -47,6 +49,32 @@ extern int lineNumber; //!< External line counter
 /* uso de strdup */
 #include <string.h>
 
+std::string process_string(const char * s){
+  std::string result;
+
+  while(*s){
+    if (*s == '\\'){
+      ++s;
+      
+      if(*s == '\0'){
+        result += '\\';
+        break;
+      }
+      
+      switch (*s){
+        case 't': result += '\t'; break;
+        case 'n': result += '\n'; break;
+        case '\'': result += '\''; break;
+        case '\\': result += '\\'; break;
+        default:  result += *s; break;
+      }
+    } else {
+      result += *s;
+    }
+    ++s;
+  }
+  return result;
+}
 
 %}
 
@@ -60,6 +88,10 @@ LETTER [a-zA-Z]
 NUMBER1 {DIGIT}+\.?
 
 NUMBER2 {DIGIT}*\.{DIGIT}+
+
+NUMBER3 {DIGIT}+e[+-]?{DIGIT}+
+
+NUMBER4 {DIGIT}*.\{DIGIT}+e[+-]?{DIGIT}+
 
 IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 
@@ -92,16 +124,26 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 			return COMMA;
 		}
 
-{NUMBER1}|{NUMBER2}  {
+{NUMBER1}|{NUMBER2}|{NUMBER3}|{NUMBER4}  {
 					  /* MODIFIED in example 4 */
 					  /* Conversion of type and sending of the numerical value to the parser */
 					   yylval.number = atof(yytext); 
 
                        return NUMBER; 
-                      }
+}
+
+[a-zA-Z][a-zA-Z0-9_]*_  {
+  BEGIN(ERROR);
+  yymore();
+}
+
+[a-zA-Z][a-zA-Z0-9_]*__[a-zA-Z0-9_]*  {
+  BEGIN(ERROR);
+  yymore();
+}
 
 
-{IDENTIFIER}   		 {
+[a-zA-Z][a-zA-Z0-9_]*   		 {
 						 /* NEW in example 7 */
 						 std::string identifier(yytext);
 
@@ -145,6 +187,13 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 								return s->getToken();
 							}
                      }
+
+\'([^\'\\]|\\.)*\' {
+  std::string raw(yytext+1, yytext + strlen(yytext) - 1):
+  std::string processed = process_string(raw.c_str());
+  yylval.string = strdup(processed.c_str());
+  return STRING;
+}
 
 "-"		{ return MINUS;  } 			/* NEW in example 3 */
 "+"		{ return PLUS;   } 			/* NEW in example 3 */

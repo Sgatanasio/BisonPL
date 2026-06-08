@@ -72,9 +72,31 @@ static struct {
 	      } keyword[] = { 
 	                    {"print", PRINT},
 	                    {"read",  READ},
-						{"if",	  IF},   	// NEW in example 17
-						{"else",  ELSE}, 	// NEW in example 17
-						{"while", WHILE},	// NEW in example 17
+                      {"read_string",READ_STRING},
+                      {"if",	  IF},   	// NEW in example 17
+                      {"else",  ELSE}, 	// NEW in example 17
+                      {"while", WHILE},	// NEW in example 17
+                      {"then",    THEN},
+                      {"end_if",  END_IF},
+                      {"do",         DO},
+                      {"end_while",  END_WHILE},
+                      {"repeat", REPEAT},
+                      {"until",  UNTIL},
+                      {"for",     FOR},
+                      {"end_for", END_FOR},
+                      {"from",    FROM},
+                      {"step",    STEP},
+                      {"to",      TO},
+                      {"switch",     SWITCH},
+                      {"case",       CASE},
+                      {"default",    DEFAULT},
+                      {"end_switch", END_SWITCH},
+                      {"clear_screen", CLEAR_KW},
+                      {"place",        PLACE_KW},
+                      {"mod", MODULO},
+                      {"or",  OR},
+                      {"and", AND},
+                      {"not", NOT},
 	                    {"",      0}
 	                   };
 
