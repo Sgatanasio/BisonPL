@@ -9,12 +9,7 @@ CPP = g++
 # -Wall: all warnings
 # -ansi: standard language
 # -02: optimization level
-CFLAGS = -c -g  -Wall -ansi -O2
-
-# Directive for flex's library
-LFLAGS = -lfl
-#LFLAGS = -ll
-
+CFLAGS = -c -g  -Wall -std=c++11 -O2
 # Objects
 OBJECTS= $(NAME).o
 OBJECTS-PARSER = parser/*.o
@@ -43,10 +38,9 @@ INCLUDES = ./parser/interpreter.tab.h ./error/error.hpp \
 
 
 #Modified in examples 7, 16
-$(NAME).exe :  parser-dir error-dir table-dir ast-dir $(OBJECTS)
+$(NAME) :  parser-dir error-dir table-dir ast-dir $(OBJECTS)
 	@echo "Generating " $(NAME).exe
-	@$(CPP) $(OBJECTS) $(OBJECTS-PARSER) $(OBJECTS-ERROR)  $(OBJECTS-TABLE)  $(OBJECTS-AST) \
-	$(LFLAGS) -o $(NAME).exe 
+	@$(CPP) $(OBJECTS) $(OBJECTS-PARSER) $(OBJECTS-ERROR) $(OBJECTS-TABLE) $(OBJECTS-AST) -o $(NAME) 
 
 
 # Main program
@@ -92,11 +86,6 @@ $(NAME).output:
 
 
 #######################################################
-# Generate the documentation
-doc: Doxyfile
-	doxygen
-
-#######################################################
 # Auxiliary files and html directory are deleted
 # Modified in examples 7, 16
 .PHONY: clean
@@ -104,7 +93,7 @@ clean:
 	@echo "Deleting html"
 	@rm -rf html 
 	@echo "Deleting " $(OBJECTS)  $(NAME).exe  *~ 
-	@rm -f $(OBJECTS) $(NAME).exe *~ 
+	@rm -f $(OBJECTS) $(NAME) *~ 
 	@echo
 	@make -C parser/ clean 
 	@echo

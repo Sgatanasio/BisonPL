@@ -159,7 +159,7 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 %type <stmts> stmtlist
 
 // New in example 17: if, while, block
-%type <st> stmt asgn print read if while block
+%type <st> stmt asgn print read read_string if while block repeat for clear_kw place_kw
 
 %type <prog> program
 
@@ -173,10 +173,15 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 /*******************************************/
 
 /* NEW in example 17: IF, ELSE, WHILE */
-%token PRINT READ IF ELSE WHILE 
+%token PRINT READ READ_STRING
+%token IF THEN ELSE END_IF
+%token WHILE DO END_WHILE
+%token REPEAT UNTIL
+%token FOR FROM TO STEP END_FOR
+%token CLEAR_KW PLACE_KW
 
 /* NEW in example 17 */
-%token LETFCURLYBRACKET RIGHTCURLYBRACKET
+%token LEFTCURLYBRACKET RIGHTCURLYBRACKET
 
 /* NEW in example 7 */
 %right ASSIGNMENT
@@ -195,7 +200,7 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 /*******************************************/
 
 /* MODIFIED in examples 11, 13 */
-%token <string> VARIABLE UNDEFINED CONSTANT BUILTIN
+%token <string> STRING VARIABLE UNDEFINED CONSTANT BUILTIN
 
 /* Left associativity */
 
@@ -303,20 +308,29 @@ stmt: SEMICOLON  /* Empty statement: ";" */
 		// Default action
 		// $$ = $1;
 	  }
+  | read_string SEMICOLON {
+
+  }
 	/*  NEW in example 17 */
-	| if 
+	| if
 	 {
 		// Default action
 		// $$ = $1;
 	 }
 	/*  NEW in example 17 */
-	| while 
+	| while
 	 {
 		// Default action
 		// $$ = $1;
 	 }
+  | repeat  {
+
+  }
+  | for {
+
+  }
 	/*  NEW in example 17 */
-	| block 
+	| block
 	 {
 		// Default action
 		// $$ = $1;
@@ -324,7 +338,7 @@ stmt: SEMICOLON  /* Empty statement: ";" */
 ;
 
 
-block: LETFCURLYBRACKET stmtlist RIGHTCURLYBRACKET  
+block: LEFTCURLYBRACKET stmtlist RIGHTCURLYBRACKET  
 		{
 			// Create a new block of statements node
 			$$ = new lp::BlockStmt($2); 
@@ -526,7 +540,7 @@ exp:	NUMBER
 						break;
 
 					case 2:
-						{
+            {
 							// Get the expressions from the list of expressions
 							lp::ExpNode *e1 = $3->front();
 							$3->pop_front();

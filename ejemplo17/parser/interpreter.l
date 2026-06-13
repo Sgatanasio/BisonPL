@@ -1,5 +1,5 @@
 %option case-insensitive
-
+%option noyywrap
 /*! 
   \file interpreter.l
   \brief Lexical or scanner file
@@ -91,7 +91,7 @@ NUMBER2 {DIGIT}*\.{DIGIT}+
 
 NUMBER3 {DIGIT}+e[+-]?{DIGIT}+
 
-NUMBER4 {DIGIT}*.\{DIGIT}+e[+-]?{DIGIT}+
+NUMBER4 {DIGIT}*\.{DIGIT}+e[+-]?{DIGIT}+
 
 IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 
@@ -189,7 +189,7 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
                      }
 
 \'([^\'\\]|\\.)*\' {
-  std::string raw(yytext+1, yytext + strlen(yytext) - 1):
+  std::string raw(yytext+1, yytext + strlen(yytext) - 1);
   std::string processed = process_string(raw.c_str());
   yylval.string = strdup(processed.c_str());
   return STRING;
@@ -231,7 +231,7 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 
 "&&"	{ return AND; }				/* NEW in example 15 */
 
-"{"		{ return LETFCURLYBRACKET; } 	/* NEW in example 17 */
+"{"		{ return LEFTCURLYBRACKET; } 	/* NEW in example 17 */
 
 "}"		{ return RIGHTCURLYBRACKET; }	/* NEW in example 17 */
 
