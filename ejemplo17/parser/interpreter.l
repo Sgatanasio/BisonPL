@@ -1,5 +1,6 @@
-%option case-insensitive
 %option noyywrap
+%option case-sensitive
+
 /*! 
   \file interpreter.l
   \brief Lexical or scanner file
@@ -49,32 +50,6 @@ extern int lineNumber; //!< External line counter
 /* uso de strdup */
 #include <string.h>
 
-std::string process_string(const char * s){
-  std::string result;
-
-  while(*s){
-    if (*s == '\\'){
-      ++s;
-      
-      if(*s == '\0'){
-        result += '\\';
-        break;
-      }
-      
-      switch (*s){
-        case 't': result += '\t'; break;
-        case 'n': result += '\n'; break;
-        case '\'': result += '\''; break;
-        case '\\': result += '\\'; break;
-        default:  result += *s; break;
-      }
-    } else {
-      result += *s;
-    }
-    ++s;
-  }
-  return result;
-}
 
 %}
 
@@ -97,10 +72,16 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 
 /* NEW in example 3 */
 /* STATE  */
-%x ERROR
+%x ERROR COMMENT
 
 /*! \name REGULAR EXPRESSIONS  */
 %%
+
+"(*"            { BEGIN(COMMENT); }
+<COMMENT>.*$    { ; }
+<COMMENT>"\*\)" { BEGIN(INITIAL); }
+
+#.*$          { ; }
 
 [ \t] 	{ ; }    /* skip white space and tabular */
 
@@ -130,6 +111,11 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 					   yylval.number = atof(yytext); 
 
                        return NUMBER; 
+                      }
+
+[a-zA-Z][a-zA-Z0-9_]*__[a-zA-Z0-9_]* {
+  BEGIN(ERROR);
+  yymore();
 }
 
 [a-zA-Z][a-zA-Z0-9_]*_  {
@@ -137,13 +123,7 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
   yymore();
 }
 
-[a-zA-Z][a-zA-Z0-9_]*__[a-zA-Z0-9_]*  {
-  BEGIN(ERROR);
-  yymore();
-}
-
-
-[a-zA-Z][a-zA-Z0-9_]*   		 {
+[a-zA-Z][a-zA-Z0-9_]*   {
 						 /* NEW in example 7 */
 						 std::string identifier(yytext);
 
@@ -188,34 +168,25 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 							}
                      }
 
-\'([^\'\\]|\\.)*\' {
-  std::string raw(yytext+1, yytext + strlen(yytext) - 1);
-  std::string processed = process_string(raw.c_str());
-  yylval.string = strdup(processed.c_str());
-  return STRING;
-}
-
 "-"		{ return MINUS;  } 			/* NEW in example 3 */
 "+"		{ return PLUS;   } 			/* NEW in example 3 */
 
 "*"	    { return MULTIPLICATION; } 	/* NEW in example 3 */
 "/"     { return DIVISION; } 		/* NEW in example 3 */
+"//"    { return INT_DIVISION; }
+
+"||"    { return CONCAT; }
 
 "("     { return LPAREN; } 			/* NEW in example 3 */
 ")"	    { return RPAREN; } 			/* NEW in example 3 */
-
-
-
-"%"     { return MODULO; }			/* NEW in example 5 */
 
 "^"	    { return POWER; }			/* NEW in example 5 */
 
 ":=" 	{ return ASSIGNMENT; }		/* NEW in example 7 */
 
-
 "="	{ return EQUAL; }			/* NEW in example 15 */
 
-"!="	{ return NOT_EQUAL; }		/* NEW in example 15 */
+"<>"	{ return NOT_EQUAL; }		/* NEW in example 15 */
 
 ">="	{ return GREATER_OR_EQUAL; }/* NEW in example 15 */
 
@@ -225,13 +196,7 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 
 "<"		{ return LESS_THAN; }		/* NEW in example 15 */
 
-"!"		{ return NOT; }				/* NEW in example 15 */
-
-"||"	{ return OR; }				/* NEW in example 15 */
-
-"&&"	{ return AND; }				/* NEW in example 15 */
-
-"{"		{ return LEFTCURLYBRACKET; } 	/* NEW in example 17 */
+"{"		{ return LETFCURLYBRACKET; } 	/* NEW in example 17 */
 
 "}"		{ return RIGHTCURLYBRACKET; }	/* NEW in example 17 */
 

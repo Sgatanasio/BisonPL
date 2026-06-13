@@ -3,7 +3,6 @@
   \brief Grammar file
 */
 
-
 %{
 #include <iostream>
 #include <string>
@@ -159,7 +158,7 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 %type <stmts> stmtlist
 
 // New in example 17: if, while, block
-%type <st> stmt asgn print read read_string if while block repeat for clear_kw place_kw
+%type <st> stmt asgn print read read_string if while repeat for block
 
 %type <prog> program
 
@@ -173,15 +172,15 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 /*******************************************/
 
 /* NEW in example 17: IF, ELSE, WHILE */
-%token PRINT READ READ_STRING
-%token IF THEN ELSE END_IF
-%token WHILE DO END_WHILE
-%token REPEAT UNTIL
+%token PRINT READ READ_STRING 
+%token IF THEN ELSE END_IF 
+%token WHILE DO END_WHILE 
+%token REPEAT UNTIL 
 %token FOR FROM TO STEP END_FOR
-%token CLEAR_KW PLACE_KW
 
+%token CLEAR_KW PLACE_KW
 /* NEW in example 17 */
-%token LEFTCURLYBRACKET RIGHTCURLYBRACKET
+%token LETFCURLYBRACKET RIGHTCURLYBRACKET
 
 /* NEW in example 7 */
 %right ASSIGNMENT
@@ -219,7 +218,9 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 %left PLUS MINUS 
 
 /* MODIFIED in example 5 */
-%left MULTIPLICATION DIVISION MODULO
+%left MULTIPLICATION DIVISION INT_DIVISION MODULO
+
+%left CONCAT
 
 %left LPAREN RPAREN
 
@@ -308,35 +309,25 @@ stmt: SEMICOLON  /* Empty statement: ";" */
 		// Default action
 		// $$ = $1;
 	  }
-  | read_string SEMICOLON {
+  | read_string SEMICOLON
+    {
 
-  }
-  | clear_kw SEMICOLON {
-
-  }
-  | place_kw SEMICOLON {
-
-  }
+    }
 	/*  NEW in example 17 */
-	| if
+	| if 
 	 {
 		// Default action
 		// $$ = $1;
 	 }
 	/*  NEW in example 17 */
-	| while
+	| while 
 	 {
 		// Default action
 		// $$ = $1;
 	 }
-  | repeat  {
-
-  }
-  | for {
-
-  }
-	/*  NEW in example 17 */
-	| block
+  | repeat SEMICOLON  {}
+  | for               {}
+	| block 
 	 {
 		// Default action
 		// $$ = $1;
@@ -344,7 +335,7 @@ stmt: SEMICOLON  /* Empty statement: ";" */
 ;
 
 
-block: LEFTCURLYBRACKET stmtlist RIGHTCURLYBRACKET  
+block: LETFCURLYBRACKET stmtlist RIGHTCURLYBRACKET  
 		{
 			// Create a new block of statements node
 			$$ = new lp::BlockStmt($2); 
@@ -372,10 +363,7 @@ if:	/* Simple conditional statement */
 	/* Compound conditional statement */
 	| IF controlSymbol cond THEN stmtlist ELSE stmtlist END_IF
 	 {
-		// Create a new if statement node
 		$$ = new lp::IfStmt($3, new lp::BlockStmt($5), new lp::BlockStmt($7));
-
-		// To control the interactive mode
 		control--;
 	 }
 ;
@@ -385,34 +373,30 @@ while:  WHILE controlSymbol cond DO stmtlist END_WHILE
 		{
 			// Create a new while statement node
 			$$ = new lp::WhileStmt($3, new lp::BlockStmt($5));
-
-			// To control the interactive mode
 			control--;
     }
 ;
 
-repeat : REPEAT controlSymbol stmtlist UNTIL cond SEMICOLON
-       {
+repeat: REPEAT controlSymbol stmtlist UNTIL cond 
+      {
         $$ = new lp::RepeatStmt(new lp::BlockStmt($3), $5);
         control--;
-       }
+      }
 ;
 
 for : FOR controlSymbol VARIABLE FROM exp TO exp DO stmtlist END_FOR
     {
-      $$ = new lp::ForStmt($3, $5, $7, new lp::BlockStmt($9));
-      control--;
+      $$ = new lp::ForStmt($3,$5,$7,new lp::BlockStmt($9));
     }
     | FOR controlSymbol VARIABLE FROM exp TO exp STEP exp DO stmtlist END_FOR
     {
       $$ = new lp::ForStmt($3,$5,$7,$9,new lp::BlockStmt($11));
-      control--;
     }
 ;
 
 	/*  NEW in example 17 */
 cond: 	LPAREN exp RPAREN
-		{
+		{ 
 			$$ = $2;
 		}
 ;
@@ -462,24 +446,17 @@ read:  READ LPAREN VARIABLE RPAREN
 		}
 ;
 
-read_string: READ_STRING LPAREN VARIABLE RPAREN
-           {
+read_string : READ_STRING LPAREN VARIABLE RPAREN
+            {
               $$ = new lp::ReadStringStmt($3);
-           }
-           | READ_STRING LPAREN CONSTANT RPAREN
-           {
-              execerror("Semantic error in \"read_string statement\": it is not allowed to modify a constant ",$3);
-           }
+            }
+            | READ_STRING LPAREN CONSTANT RPAREN
+            {
+              execerror("Semantic error in \"read statement\": it is not allowed to modify a constant ",$3);
+            }
 ;
 
-clear_kw : CLEAR_KW {
-            $$ = new lp::ClearKwStmt();
-         }
-;
 
-place_kw : PLACE_KW LPAREN exp COMMA exp RPAREN {
-            $$ = new lp::PlaceKwStmt($3,$5);
-         }
 
 exp:	NUMBER 
 		{ 
@@ -583,7 +560,7 @@ exp:	NUMBER
 						break;
 
 					case 2:
-            {
+						{
 							// Get the expressions from the list of expressions
 							lp::ExpNode *e1 = $3->front();
 							$3->pop_front();

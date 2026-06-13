@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string>
 #include <list>
+#include <system_error>
 
 
 #define ERROR_BOUND 1.0e-6  //!< Error bound for the comparison of real numbers.
@@ -57,9 +58,7 @@ namespace lp
 		return 0.0;
 	}		
 
-    virtual std::string evaluateString(){
-      return "";
-    }
+
 	/*!	
 		\brief   Evaluate the expression as BOOL
 		\warning Virtual function: could be redefined in the heir classes
@@ -70,6 +69,9 @@ namespace lp
 	{
 		return false;
 	}
+    virtual std::string evaluateString(){
+      return "DEF_STRING_AVOID???";
+    }
 
 };
 
@@ -127,9 +129,8 @@ class VariableNode : public ExpNode
 		\sa		   getType, printAST, evaluateNumber
 	*/
 	  bool evaluateBool();
-
-	  std::string evaluateString();
-
+    
+    std::string evaluateString();
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -245,8 +246,9 @@ class StringNode : public ExpNode{
     StringNode(std::string value){
       this->_value = value;
     }
+
     int getType();
-    void printAST();
+    void printAST();;
     std::string evaluateString();
 };
 
@@ -1535,7 +1537,7 @@ class ReadStmt : public Statement
   void evaluate();
 };
 
-class ReadStringStmt : public Statement {
+class ReadStringStmt : public Statement{
   private:
     std::string _id;
 
@@ -1543,10 +1545,11 @@ class ReadStringStmt : public Statement {
     ReadStringStmt(std::string id){
       this->_id = id;
     }
-    
+
     void printAST();
     void evaluate();
 };
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1564,7 +1567,7 @@ class EmptyStmt : public Statement
 
   public:
 /*!		
-	\brief Constructor of  WhileStmt
+	\brief Constructor of  EmptyStmt
 	\post  A new EmptyStmt is created 
 */
   EmptyStmt()
@@ -1586,6 +1589,31 @@ class EmptyStmt : public Statement
 	\sa		   printAST
 */
   void evaluate();
+};
+
+class ClearKwStmt : public Statement{
+  public: 
+    ClearKwStmt()
+    {
+
+    }
+    
+    void printAST();
+    void evaluate();
+};
+
+class PlaceKwStmt : public Statement{
+  private:
+    ExpNode * _a;
+    ExpNode * _b;
+  public:
+    PlaceKwStmt(ExpNode * a, ExpNode * b){
+      this->_a = a;
+      this->_b = b;
+    }
+
+    void printAST();
+    void evaluate();
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1700,7 +1728,7 @@ class WhileStmt : public Statement
 };
 
 class RepeatStmt : public Statement{
-  private: 
+  private:
     Statement * _stmt;
     ExpNode * _cond;
   public:
@@ -1708,27 +1736,29 @@ class RepeatStmt : public Statement{
       this->_stmt = stmt;
       this->_cond = cond;
     }
+
     void printAST();
     void evaluate();
 };
 
 class ForStmt : public Statement{
-  private: 
-    std::string _var;
+  private:
+    std::string _id;
     ExpNode * _from;
     ExpNode * _to;
     ExpNode * _step;
     Statement * _stmt;
   public:
-    ForStmt(std::string var, ExpNode * from, ExpNode * to, ExpNode * step, Statement * stmt){
-      this->_var = var;
+    ForStmt(std::string id, ExpNode * from, ExpNode * to, ExpNode * step, Statement * stmt){
+      this->_id = id;
       this->_from = from;
       this->_to = to;
       this->_step = step;
       this->_stmt = stmt;
     }
-    ForStmt(std::string var, ExpNode * from, ExpNode * to, Statement * stmt){
-      this->_var = var;
+
+    ForStmt(std::string id, ExpNode * from, ExpNode * to, Statement * stmt){
+      this->_id = id;
       this->_from = from;
       this->_to = to;
       this->_step = new lp::NumberNode(1);
@@ -1739,30 +1769,6 @@ class ForStmt : public Statement{
     void evaluate();
 };
 
-class ClearKwStmt: public Statement{
-  public:
-    ClearKwStmt()
-    {
-
-    }
-    
-    void printAST();
-    void evaluate();
-};
-
-class PlaceKwStmt: public Statement{
-  private:
-    ExpNode * _a;
-    ExpNode * _b;
-  public:
-    PlaceKwStmt(ExpNode * a,ExpNode *b){
-      this->_a = a;
-      this->_b = b;
-    }
-
-    void printAST();
-    void evaluate();
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////

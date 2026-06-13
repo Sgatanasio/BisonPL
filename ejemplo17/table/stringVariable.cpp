@@ -1,6 +1,6 @@
 /*!	
 	\file    numericVariable.cpp
-	\brief   Code of some functions of NumericVariable class
+	\brief   Code of some functions of StringVariable class
 	\author 
 	\date    2017-10-19
 	\version 1.0
@@ -16,7 +16,7 @@
 
 
 /*
- Definitions of the read and write functions of the NumericVariable class 
+ Definitions of the read and write functions of the StringVariable class 
 */
 
 void lp::StringVariable::read()
