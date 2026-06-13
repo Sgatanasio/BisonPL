@@ -1,0 +1,5 @@
+for a from 1 to 6 step 1 do
+  print(a);
+end_for
+
+
