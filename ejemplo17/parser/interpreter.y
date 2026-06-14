@@ -3,6 +3,7 @@
   \brief Grammar file
 */
 
+
 %{
 #include <iostream>
 #include <string>
@@ -158,7 +159,7 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 %type <stmts> stmtlist
 
 // New in example 17: if, while, block
-%type <st> stmt asgn print read read_string if while repeat for block
+%type <st> stmt asgn print read read_string if while repeat for clear_kw place_kw block
 
 %type <prog> program
 
@@ -172,13 +173,13 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 /*******************************************/
 
 /* NEW in example 17: IF, ELSE, WHILE */
-%token PRINT READ READ_STRING 
-%token IF THEN ELSE END_IF 
-%token WHILE DO END_WHILE 
-%token REPEAT UNTIL 
+%token PRINT READ READ_STRING
+%token IF THEN ELSE END_IF
+%token WHILE DO END_WHILE
+%token REPEAT UNTIL
 %token FOR FROM TO STEP END_FOR
-
 %token CLEAR_KW PLACE_KW
+
 /* NEW in example 17 */
 %token LETFCURLYBRACKET RIGHTCURLYBRACKET
 
@@ -218,9 +219,7 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 %left PLUS MINUS 
 
 /* MODIFIED in example 5 */
-%left MULTIPLICATION DIVISION INT_DIVISION MODULO
-
-%left CONCAT
+%left MULTIPLICATION DIVISION INT_DIVISION MODULO CONCAT
 
 %left LPAREN RPAREN
 
@@ -309,10 +308,15 @@ stmt: SEMICOLON  /* Empty statement: ";" */
 		// Default action
 		// $$ = $1;
 	  }
-  | read_string SEMICOLON
-    {
+  | read_string SEMICOLON {
 
-    }
+  }
+  | clear_kw  SEMICOLON   {
+  
+  }
+  | place_kw  SEMICOLON   {
+
+  }
 	/*  NEW in example 17 */
 	| if 
 	 {
@@ -325,8 +329,13 @@ stmt: SEMICOLON  /* Empty statement: ";" */
 		// Default action
 		// $$ = $1;
 	 }
-  | repeat SEMICOLON  {}
-  | for               {}
+  | repeat  {
+  
+  }
+  | for     {
+
+  }
+	/*  NEW in example 17 */
 	| block 
 	 {
 		// Default action
@@ -363,7 +372,10 @@ if:	/* Simple conditional statement */
 	/* Compound conditional statement */
 	| IF controlSymbol cond THEN stmtlist ELSE stmtlist END_IF
 	 {
+		// Create a new if statement node
 		$$ = new lp::IfStmt($3, new lp::BlockStmt($5), new lp::BlockStmt($7));
+
+		// To control the interactive mode
 		control--;
 	 }
 ;
@@ -373,25 +385,26 @@ while:  WHILE controlSymbol cond DO stmtlist END_WHILE
 		{
 			// Create a new while statement node
 			$$ = new lp::WhileStmt($3, new lp::BlockStmt($5));
+
+			// To control the interactive mode
 			control--;
     }
 ;
 
-repeat: REPEAT controlSymbol stmtlist UNTIL cond 
-      {
-        $$ = new lp::RepeatStmt(new lp::BlockStmt($3), $5);
+repeat: REPEAT controlSymbol stmtlist UNTIL cond {
+        $$ = new lp::RepeatStmt(new lp::BlockStmt($3),$5);
         control--;
       }
 ;
 
-for : FOR controlSymbol VARIABLE FROM exp TO exp DO stmtlist END_FOR
-    {
-      $$ = new lp::ForStmt($3,$5,$7,new lp::BlockStmt($9));
-    }
-    | FOR controlSymbol VARIABLE FROM exp TO exp STEP exp DO stmtlist END_FOR
-    {
-      $$ = new lp::ForStmt($3,$5,$7,$9,new lp::BlockStmt($11));
-    }
+for   : FOR controlSymbol VARIABLE FROM exp TO exp DO stmtlist END_FOR {
+        $$ = new lp::ForStmt($3,$5,$7,new lp::BlockStmt($9));
+        control--;
+      }
+      | FOR controlSymbol VARIABLE FROM exp TO exp STEP exp DO stmtlist END_FOR {
+        $$ = new lp::ForStmt($3,$5,$7,$9, new lp::BlockStmt($11));
+        control--;
+      }
 ;
 
 	/*  NEW in example 17 */
@@ -446,24 +459,33 @@ read:  READ LPAREN VARIABLE RPAREN
 		}
 ;
 
-read_string : READ_STRING LPAREN VARIABLE RPAREN
-            {
+read_string: READ_STRING LPAREN VARIABLE RPAREN {
               $$ = new lp::ReadStringStmt($3);
-            }
-            | READ_STRING LPAREN CONSTANT RPAREN
-            {
-              execerror("Semantic error in \"read statement\": it is not allowed to modify a constant ",$3);
-            }
+           }
+           |  READ_STRING LPAREN CONSTANT RPAREN {
+ 			        execerror("Semantic error in \"read_string statement\": it is not allowed to modify a constant ",$3);
+           }
 ;
 
+clear_kw: CLEAR_KW {
+          $$ = new lp::ClearKwStmt();
+        }
+;
 
+place_kw: PLACE_KW LPAREN exp COMMA exp RPAREN {
+          $$ = new lp::PlaceKwStmt($3,$5);
+        }
+;
 
 exp:	NUMBER 
 		{ 
 			// Create a new number node
 			$$ = new lp::NumberNode($1);
 		}
-
+  |   STRING 
+    {
+      $$ = new lp::StringNode($1);
+    }
 	| 	exp PLUS exp 
 		{ 
 			// Create a new plus node
@@ -487,7 +509,14 @@ exp:	NUMBER
 		  // Create a new division node	
 		  $$ = new lp::DivisionNode($1, $3);
 	   }
-
+  |   exp INT_DIVISION exp 
+    {
+      $$ = new lp::IntDivisionNode($1,$3);
+    }
+  |   exp CONCAT exp
+    {
+      $$ = new lp::ConcatNode($1,$3);
+    }
 	| 	LPAREN exp RPAREN
        	{ 
 		    // just copy up the expression node 
@@ -511,8 +540,7 @@ exp:	NUMBER
 		  // Create a new modulo node	
 
 		  $$ = new lp::ModuloNode($1, $3);
-       }
-
+    }
 	|	exp POWER exp 
      	{ 
 		  // Create a new power node	

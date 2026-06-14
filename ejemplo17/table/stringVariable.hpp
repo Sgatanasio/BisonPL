@@ -64,7 +64,7 @@ class StringVariable:public lp::Variable
 	\note  Inline function
 	\param n: object of StringVariable class
 	\pre   None
-	\post  A new StringVariable is created with the values of an existent NumericVariable
+	\post  A new StringVariable is created with the values of an existent StringVariable
 	\sa    setName, setValue
 */
 	StringVariable(const StringVariable & n)

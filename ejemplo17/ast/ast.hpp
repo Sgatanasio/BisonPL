@@ -13,7 +13,6 @@
 #include <stdlib.h>
 #include <string>
 #include <list>
-#include <system_error>
 
 
 #define ERROR_BOUND 1.0e-6  //!< Error bound for the comparison of real numbers.
@@ -69,10 +68,8 @@ namespace lp
 	{
 		return false;
 	}
-    virtual std::string evaluateString(){
-      return "DEF_STRING_AVOID???";
-    }
-
+  
+    virtual std::string evaluateString(){ return "" ;}
 };
 
 
@@ -129,7 +126,6 @@ class VariableNode : public ExpNode
 		\sa		   getType, printAST, evaluateNumber
 	*/
 	  bool evaluateBool();
-    
     std::string evaluateString();
 };
 
@@ -239,18 +235,20 @@ class NumberNode : public ExpNode
 	double evaluateNumber();
 };
 
-class StringNode : public ExpNode{
+class StringNode : public ExpNode {
   private:
     std::string _value;
   public:
     StringNode(std::string value){
       this->_value = value;
     }
-
+    
     int getType();
-    void printAST();;
+
+    void printAST();
     std::string evaluateString();
 };
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -537,7 +535,6 @@ public:
 
 };
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -568,6 +565,16 @@ class LogicalOperatorNode : public OperatorNode
 	*/
 	int getType();
 };
+
+class StringOperatorNode : public OperatorNode {
+  public:
+    StringOperatorNode(ExpNode * L, ExpNode * R): OperatorNode(L,R){
+
+    }
+
+    int getType();
+};
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -726,6 +733,13 @@ class DivisionNode : public NumericOperatorNode
   double evaluateNumber();
 };
 
+class IntDivisionNode : public NumericOperatorNode{
+  public:
+    IntDivisionNode(ExpNode * L, ExpNode * R): NumericOperatorNode(L,R){}
+
+    void printAST();
+    double evaluateNumber();
+};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -806,6 +820,14 @@ class PowerNode : public NumericOperatorNode
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
+class ConcatNode : public StringOperatorNode{
+  public:
+    ConcatNode(ExpNode * L, ExpNode * R) : StringOperatorNode(L,R){}
+    
+    void printAST();
+    std::string evaluateString();
+
+};
 
 /*!	
   \class   BuiltinFunctionNode
@@ -1550,6 +1572,31 @@ class ReadStringStmt : public Statement{
     void evaluate();
 };
 
+class ClearKwStmt : public Statement{
+  public:
+    ClearKwStmt(){
+
+    }
+
+    void printAST();
+    void evaluate();
+};
+
+class PlaceKwStmt : public Statement{
+  private:
+    ExpNode * _a;
+    ExpNode * _b;
+  public:
+    PlaceKwStmt(ExpNode * a, ExpNode * b){
+      this->_a = a;
+      this->_b = b;
+    }
+
+    void printAST();
+    void evaluate();
+};
+
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1567,7 +1614,7 @@ class EmptyStmt : public Statement
 
   public:
 /*!		
-	\brief Constructor of  EmptyStmt
+	\brief Constructor of  WhileStmt
 	\post  A new EmptyStmt is created 
 */
   EmptyStmt()
@@ -1591,30 +1638,7 @@ class EmptyStmt : public Statement
   void evaluate();
 };
 
-class ClearKwStmt : public Statement{
-  public: 
-    ClearKwStmt()
-    {
 
-    }
-    
-    void printAST();
-    void evaluate();
-};
-
-class PlaceKwStmt : public Statement{
-  private:
-    ExpNode * _a;
-    ExpNode * _b;
-  public:
-    PlaceKwStmt(ExpNode * a, ExpNode * b){
-      this->_a = a;
-      this->_b = b;
-    }
-
-    void printAST();
-    void evaluate();
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1727,8 +1751,8 @@ class WhileStmt : public Statement
   void evaluate();
 };
 
-class RepeatStmt : public Statement{
-  private:
+class RepeatStmt : public Statement {
+  private: 
     Statement * _stmt;
     ExpNode * _cond;
   public:
@@ -1749,14 +1773,6 @@ class ForStmt : public Statement{
     ExpNode * _step;
     Statement * _stmt;
   public:
-    ForStmt(std::string id, ExpNode * from, ExpNode * to, ExpNode * step, Statement * stmt){
-      this->_id = id;
-      this->_from = from;
-      this->_to = to;
-      this->_step = step;
-      this->_stmt = stmt;
-    }
-
     ForStmt(std::string id, ExpNode * from, ExpNode * to, Statement * stmt){
       this->_id = id;
       this->_from = from;
@@ -1764,11 +1780,17 @@ class ForStmt : public Statement{
       this->_step = new lp::NumberNode(1);
       this->_stmt = stmt;
     }
+    ForStmt(std::string id, ExpNode * from, ExpNode * to, ExpNode * step, Statement * stmt){
+      this->_id = id;
+      this->_from = from;
+      this->_to = to;
+      this->_step = step;
+      this->_id = id;
+    }
 
     void printAST();
     void evaluate();
 };
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////

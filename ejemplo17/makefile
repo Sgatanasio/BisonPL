@@ -9,7 +9,7 @@ CPP = g++
 # -Wall: all warnings
 # -ansi: standard language
 # -02: optimization level
-CFLAGS = -c -g  -Wall -std=c++11 -O2
+CFLAGS = -c -g  -Wall -ansi -O2
 
 # Directive for flex's library
 LFLAGS = -lfl
@@ -46,7 +46,7 @@ INCLUDES = ./parser/interpreter.tab.h ./error/error.hpp \
 $(NAME).exe :  parser-dir error-dir table-dir ast-dir $(OBJECTS)
 	@echo "Generating " $(NAME).exe
 	@$(CPP) $(OBJECTS) $(OBJECTS-PARSER) $(OBJECTS-ERROR)  $(OBJECTS-TABLE)  $(OBJECTS-AST) \
-	 -o $(NAME).exe 
+	-o $(NAME).exe 
 
 
 # Main program
