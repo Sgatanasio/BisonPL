@@ -1,5 +1,8 @@
-for a from 1 to 6 step 1 do
+a := 'string' || 'string';
+
+for b from 1 to 9 step 2 do 
   print(a);
 end_for
+
 
 

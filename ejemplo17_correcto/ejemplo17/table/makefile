@@ -55,6 +55,10 @@ numericVariable.o: numericVariable.cpp numericVariable.hpp variable.hpp symbol.h
 	@echo "Compiling " $<
 	@$(CPP) $(CFLAGS) $<
 
+stringVariable.o: stringVariable.cpp stringVariable.hpp variable.hpp symbol.hpp symbolInterface.hpp 
+	@echo "Compiling " $<
+	@$(CPP) $(CFLAGS) $<
+
 #######################################################
 # NEW in example 15
 logicalVariable.o: logicalVariable.cpp logicalVariable.hpp variable.hpp symbol.hpp symbolInterface.hpp 
@@ -62,9 +66,6 @@ logicalVariable.o: logicalVariable.cpp logicalVariable.hpp variable.hpp symbol.h
 	@$(CPP) $(CFLAGS) $<
 #######################################################
 
-stringVariable.o: stringVariable.cpp stringVariable.hpp variable.hpp symbol.hpp symbolInterface.hpp 
-	@echo "Compiling " $<
-	@$(CPP) $(CFLAGS) $<
 #######################################################
 # NEW in example 11
 constant.o: constant.cpp constant.hpp symbol.hpp symbolInterface.hpp 

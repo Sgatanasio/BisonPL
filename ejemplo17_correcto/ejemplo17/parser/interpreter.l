@@ -1,5 +1,6 @@
 %option case-insensitive
 %option noyywrap
+
 /*! 
   \file interpreter.l
   \brief Lexical or scanner file
@@ -51,24 +52,21 @@ extern int lineNumber; //!< External line counter
 
 std::string process_string(const char * s){
   std::string result;
-
   while(*s){
-    if (*s == '\\'){
+    if(*s == '\\'){
       ++s;
-      
       if(*s == '\0'){
         result += '\\';
         break;
       }
-      
-      switch (*s){
-        case 't': result += '\t'; break;
-        case 'n': result += '\n'; break;
-        case '\'': result += '\''; break;
-        case '\\': result += '\\'; break;
-        default:  result += *s; break;
+      switch (*s) {
+        case 't':   result += '\t'; break;
+        case 'n':   result += '\n'; break;
+        case '\'':  result += '\''; break;
+        case '\\':  result += '\\'; break;
+        default :   result += *s  ; break;
       }
-    } else {
+    }else {
       result += *s;
     }
     ++s;
@@ -86,21 +84,22 @@ DIGIT  [0-9]
 LETTER [a-zA-Z]
 
 NUMBER1 {DIGIT}+\.?
-
 NUMBER2 {DIGIT}*\.{DIGIT}+
-
 NUMBER3 {DIGIT}+e[+-]?{DIGIT}+
-
 NUMBER4 {DIGIT}*\.{DIGIT}+e[+-]?{DIGIT}+
 
 IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 
 /* NEW in example 3 */
 /* STATE  */
-%x ERROR
+%x ERROR COMMENT
 
 /*! \name REGULAR EXPRESSIONS  */
 %%
+
+"(*"            { BEGIN(COMMENT); }
+<COMMENT>.*$    { ; }
+<COMMENT>"*)"   { BEGIN(INITIAL); }
 
 [ \t] 	{ ; }    /* skip white space and tabular */
 
@@ -130,18 +129,24 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 					   yylval.number = atof(yytext); 
 
                        return NUMBER; 
+                      }
+
+\'([^\'\\]|\\.)*\' {
+  std::string raw(yytext + 1, yytext + strlen(yytext) - 1);
+  std::string processed = process_string(raw.c_str());
+  yylval.string = strdup(processed.c_str());
+  return STRING;
 }
 
-[a-zA-Z][a-zA-Z0-9_]*_  {
+[a-zA-Z][a-zA-Z0-9_]*_ {
   BEGIN(ERROR);
   yymore();
 }
 
-[a-zA-Z][a-zA-Z0-9_]*__[a-zA-Z0-9_]*  {
+[a-zA-Z][a-zA-Z0-9_]__[a-zA-Z0-9_]* {
   BEGIN(ERROR);
   yymore();
 }
-
 
 [a-zA-Z][a-zA-Z0-9_]*   		 {
 						 /* NEW in example 7 */
@@ -188,25 +193,17 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 							}
                      }
 
-\'([^\'\\]|\\.)*\' {
-  std::string raw(yytext+1, yytext + strlen(yytext) - 1);
-  std::string processed = process_string(raw.c_str());
-  yylval.string = strdup(processed.c_str());
-  return STRING;
-}
-
 "-"		{ return MINUS;  } 			/* NEW in example 3 */
 "+"		{ return PLUS;   } 			/* NEW in example 3 */
 
 "*"	    { return MULTIPLICATION; } 	/* NEW in example 3 */
 "/"     { return DIVISION; } 		/* NEW in example 3 */
+"//"    { return INT_DIVISION; }
+
+"||"    { return CONCAT; }
 
 "("     { return LPAREN; } 			/* NEW in example 3 */
 ")"	    { return RPAREN; } 			/* NEW in example 3 */
-
-
-
-"%"     { return MODULO; }			/* NEW in example 5 */
 
 "^"	    { return POWER; }			/* NEW in example 5 */
 
@@ -215,7 +212,7 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 
 "="	{ return EQUAL; }			/* NEW in example 15 */
 
-"!="	{ return NOT_EQUAL; }		/* NEW in example 15 */
+"<>"	{ return NOT_EQUAL; }		/* NEW in example 15 */
 
 ">="	{ return GREATER_OR_EQUAL; }/* NEW in example 15 */
 
@@ -225,13 +222,7 @@ IDENTIFIER  {LETTER}({LETTER}|{DIGIT})*
 
 "<"		{ return LESS_THAN; }		/* NEW in example 15 */
 
-"!"		{ return NOT; }				/* NEW in example 15 */
-
-"||"	{ return OR; }				/* NEW in example 15 */
-
-"&&"	{ return AND; }				/* NEW in example 15 */
-
-"{"		{ return LEFTCURLYBRACKET; } 	/* NEW in example 17 */
+"{"		{ return LETFCURLYBRACKET; } 	/* NEW in example 17 */
 
 "}"		{ return RIGHTCURLYBRACKET; }	/* NEW in example 17 */
 

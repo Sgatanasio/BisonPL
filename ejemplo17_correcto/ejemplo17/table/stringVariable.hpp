@@ -1,6 +1,6 @@
 /*!	
 	\file    numericVariable.hpp
-	\brief   Declaration of NumericVariable class
+	\brief   Declaration of StringVariable class
 	\author  
 	\date    2017-12-1
 	\version 1.0
@@ -21,20 +21,20 @@
 namespace lp{
 
 /*!	
-  \class NumericVariable
-  \brief Definition of atributes and methods of NumericVariable class
-  \note  NumericVariable Class publicly inherits from Variable class
+  \class StringVariable
+  \brief Definition of atributes and methods of StringVariable class
+  \note  StringVariable Class publicly inherits from Variable class
 */
 class StringVariable:public lp::Variable
 {
 /*!		
-\name Private atributes of NumericVariable class
+\name Private atributes of StringVariable class
 */
 	private:
-    std::string      _value;   //!< \brief Numeric value of the NumericVariable
+    std::string      _value;   //!< \brief Numeric value of the StringVariable
 
 /*!		
-\name Public methods of NumericVariable class
+\name Public methods of StringVariable class
 */
 	public:
 
@@ -45,12 +45,12 @@ class StringVariable:public lp::Variable
 /*!		
 	\brief Constructor with arguments with default values
 	\note  Inline function that uses Variable's constructor as members initializer
-	\param name: name of the NumericVariable
-	\param token: token of the NumericVariable
-	\param type: type of the NumericVariable
-	\param value: numeric value of the NumericVariable
+	\param name: name of the StringVariable
+	\param token: token of the StringVariable
+	\param type: type of the StringVariable
+	\param value: numeric value of the StringVariable
 	\pre   None
-	\post  A new NumericVariable is created with the values of the parameters
+	\post  A new StringVariable is created with the values of the parameters
 	\sa   setName, setValue
 */
 	inline StringVariable(std::string name="", int token = 0, int type = 0, std::string value=""): 
@@ -62,9 +62,9 @@ class StringVariable:public lp::Variable
 /*!		
 	\brief Copy constructor
 	\note  Inline function
-	\param n: object of NumericVariable class
+	\param n: object of StringVariable class
 	\pre   None
-	\post  A new NumericVariable is created with the values of an existent NumericVariable
+	\post  A new StringVariable is created with the values of an existent StringVariable
 	\sa    setName, setValue
 */
 	StringVariable(const StringVariable & n)
@@ -86,11 +86,11 @@ class StringVariable:public lp::Variable
 */
 	
 /*!	
-	\brief  Public method that returns the value of the NumericVariable
+	\brief  Public method that returns the value of the StringVariable
 	\note   Función inline
 	\pre    None
 	\post   None
-    \return Value of the NumericVariable
+    \return Value of the StringVariable
 	\sa		getValue
 */
 	inline std::string getValue() const
@@ -105,11 +105,11 @@ class StringVariable:public lp::Variable
 */
 		
 /*!	
-	\brief   This functions modifies the value of the NumericVariable
+	\brief   This functions modifies the value of the StringVariable
 	\note    Inline function
-	\param   value: new value of the NumericVariable
+	\param   value: new value of the StringVariable
 	\pre     None
-	\post    The value of the NumericVariable is equal to the parameter 
+	\post    The value of the StringVariable is equal to the parameter 
 	\return  void
 	\sa 	 setValue
 */
@@ -126,16 +126,16 @@ class StringVariable:public lp::Variable
 */
 		
 /*!		
-	\brief Read a NumericVariable
+	\brief Read a StringVariable
 	\pre   None
-	\post  The atributes of the NumericVariable are modified with the read values
+	\post  The atributes of the StringVariable are modified with the read values
     \sa    write
 */
 	void read();
 
 	
 /*!		
-	\brief Write a NumericVariable
+	\brief Write a StringVariable
 	\pre   None
 	\post  None
     \sa    read
@@ -149,7 +149,7 @@ class StringVariable:public lp::Variable
 	
 /*!		
 	\brief  Assignment Operator
-	\param  n: objectoof NumericVariable class
+	\param  n: objectoof StringVariable class
 	\post   The atributes of this object are equal to the atributes of the parameter
 	\return Reference to this object
 */
@@ -160,9 +160,9 @@ class StringVariable:public lp::Variable
 /*!		
 	\brief  Insertion operator
 	\param  i: input stream
-	\param  n: object of NumericVariable class
+	\param  n: object of StringVariable class
 	\pre    nome
-	\post   The atributes of the NumericVariable are modified with the inserted values from the input stream
+	\post   The atributes of the StringVariable are modified with the inserted values from the input stream
 	\return The input stream
 */
 	friend std::istream &operator>>(std::istream &i, StringVariable &n);
@@ -170,14 +170,14 @@ class StringVariable:public lp::Variable
 /*!		
 	\brief  Extraction operator
 	\param  o: output stream
-	\param  n: object of NumericVariable class
+	\param  n: object of StringVariable class
 	\pre    nome
-	\post   The atributes of the NumericVariable are written in the output stream
+	\post   The atributes of the StringVariable are written in the output stream
 	\return The output stream
 */
 	friend std::ostream &operator<<(std::ostream &o, StringVariable const &n);
 	
-// End of NumericVariable class
+// End of StringVariable class
 };
 
 // End of name space lp

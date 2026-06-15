@@ -1785,7 +1785,7 @@ class ForStmt : public Statement{
       this->_from = from;
       this->_to = to;
       this->_step = step;
-      this->_id = id;
+      this->_stmt = stmt;
     }
 
     void printAST();

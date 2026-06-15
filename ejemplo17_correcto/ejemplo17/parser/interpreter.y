@@ -159,7 +159,7 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 %type <stmts> stmtlist
 
 // New in example 17: if, while, block
-%type <st> stmt asgn print read read_string if while block repeat for clear_kw place_kw
+%type <st> stmt asgn print read read_string if while repeat for clear_kw place_kw block
 
 %type <prog> program
 
@@ -181,7 +181,7 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 %token CLEAR_KW PLACE_KW
 
 /* NEW in example 17 */
-%token LEFTCURLYBRACKET RIGHTCURLYBRACKET
+%token LETFCURLYBRACKET RIGHTCURLYBRACKET
 
 /* NEW in example 7 */
 %right ASSIGNMENT
@@ -219,7 +219,7 @@ extern lp::AST *root; //!< External root of the abstract syntax tree AST
 %left PLUS MINUS 
 
 /* MODIFIED in example 5 */
-%left MULTIPLICATION DIVISION MODULO
+%left MULTIPLICATION DIVISION INT_DIVISION MODULO CONCAT
 
 %left LPAREN RPAREN
 
@@ -311,32 +311,32 @@ stmt: SEMICOLON  /* Empty statement: ";" */
   | read_string SEMICOLON {
 
   }
-  | clear_kw SEMICOLON {
-
+  | clear_kw  SEMICOLON   {
+  
   }
-  | place_kw SEMICOLON {
+  | place_kw  SEMICOLON   {
 
   }
 	/*  NEW in example 17 */
-	| if
+	| if 
 	 {
 		// Default action
 		// $$ = $1;
 	 }
 	/*  NEW in example 17 */
-	| while
+	| while 
 	 {
 		// Default action
 		// $$ = $1;
 	 }
   | repeat  {
-
+  
   }
-  | for {
+  | for     {
 
   }
 	/*  NEW in example 17 */
-	| block
+	| block 
 	 {
 		// Default action
 		// $$ = $1;
@@ -344,7 +344,7 @@ stmt: SEMICOLON  /* Empty statement: ";" */
 ;
 
 
-block: LEFTCURLYBRACKET stmtlist RIGHTCURLYBRACKET  
+block: LETFCURLYBRACKET stmtlist RIGHTCURLYBRACKET  
 		{
 			// Create a new block of statements node
 			$$ = new lp::BlockStmt($2); 
@@ -391,28 +391,25 @@ while:  WHILE controlSymbol cond DO stmtlist END_WHILE
     }
 ;
 
-repeat : REPEAT controlSymbol stmtlist UNTIL cond SEMICOLON
-       {
-        $$ = new lp::RepeatStmt(new lp::BlockStmt($3), $5);
+repeat: REPEAT controlSymbol stmtlist UNTIL cond {
+        $$ = new lp::RepeatStmt(new lp::BlockStmt($3),$5);
         control--;
-       }
+      }
 ;
 
-for : FOR controlSymbol VARIABLE FROM exp TO exp DO stmtlist END_FOR
-    {
-      $$ = new lp::ForStmt($3, $5, $7, new lp::BlockStmt($9));
-      control--;
-    }
-    | FOR controlSymbol VARIABLE FROM exp TO exp STEP exp DO stmtlist END_FOR
-    {
-      $$ = new lp::ForStmt($3,$5,$7,$9,new lp::BlockStmt($11));
-      control--;
-    }
+for   : FOR controlSymbol VARIABLE FROM exp TO exp DO stmtlist END_FOR {
+        $$ = new lp::ForStmt($3,$5,$7,new lp::BlockStmt($9));
+        control--;
+      }
+      | FOR controlSymbol VARIABLE FROM exp TO exp STEP exp DO stmtlist END_FOR {
+        $$ = new lp::ForStmt($3,$5,$7,$9, new lp::BlockStmt($11));
+        control--;
+      }
 ;
 
 	/*  NEW in example 17 */
 cond: 	LPAREN exp RPAREN
-		{
+		{ 
 			$$ = $2;
 		}
 ;
@@ -462,31 +459,33 @@ read:  READ LPAREN VARIABLE RPAREN
 		}
 ;
 
-read_string: READ_STRING LPAREN VARIABLE RPAREN
-           {
+read_string: READ_STRING LPAREN VARIABLE RPAREN {
               $$ = new lp::ReadStringStmt($3);
            }
-           | READ_STRING LPAREN CONSTANT RPAREN
-           {
-              execerror("Semantic error in \"read_string statement\": it is not allowed to modify a constant ",$3);
+           |  READ_STRING LPAREN CONSTANT RPAREN {
+ 			        execerror("Semantic error in \"read_string statement\": it is not allowed to modify a constant ",$3);
            }
 ;
 
-clear_kw : CLEAR_KW {
-            $$ = new lp::ClearKwStmt();
-         }
+clear_kw: CLEAR_KW {
+          $$ = new lp::ClearKwStmt();
+        }
 ;
 
-place_kw : PLACE_KW LPAREN exp COMMA exp RPAREN {
-            $$ = new lp::PlaceKwStmt($3,$5);
-         }
+place_kw: PLACE_KW LPAREN exp COMMA exp RPAREN {
+          $$ = new lp::PlaceKwStmt($3,$5);
+        }
+;
 
 exp:	NUMBER 
 		{ 
 			// Create a new number node
 			$$ = new lp::NumberNode($1);
 		}
-
+  |   STRING 
+    {
+      $$ = new lp::StringNode($1);
+    }
 	| 	exp PLUS exp 
 		{ 
 			// Create a new plus node
@@ -510,7 +509,14 @@ exp:	NUMBER
 		  // Create a new division node	
 		  $$ = new lp::DivisionNode($1, $3);
 	   }
-
+  |   exp INT_DIVISION exp 
+    {
+      $$ = new lp::IntDivisionNode($1,$3);
+    }
+  |   exp CONCAT exp
+    {
+      $$ = new lp::ConcatNode($1,$3);
+    }
 	| 	LPAREN exp RPAREN
        	{ 
 		    // just copy up the expression node 
@@ -534,8 +540,7 @@ exp:	NUMBER
 		  // Create a new modulo node	
 
 		  $$ = new lp::ModuloNode($1, $3);
-       }
-
+    }
 	|	exp POWER exp 
      	{ 
 		  // Create a new power node	
@@ -583,7 +588,7 @@ exp:	NUMBER
 						break;
 
 					case 2:
-            {
+						{
 							// Get the expressions from the list of expressions
 							lp::ExpNode *e1 = $3->front();
 							$3->pop_front();

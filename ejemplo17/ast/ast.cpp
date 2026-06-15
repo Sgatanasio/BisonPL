@@ -1216,7 +1216,7 @@ void lp::AssignmentStmt::evaluate()
           table.installSymbol(v);
         }
       }
-
+      break;
 			default:
 				warning("Runtime error: incompatible type of expression for ", "Assigment");
 		}
@@ -1572,7 +1572,7 @@ void lp::ForStmt::evaluate(){
   double end = this->_to->evaluateNumber();
   double step = this->_step->evaluateNumber();
 
-  if( std::abs(std::fmod(end - start, step)) < ERROR_BOUND || std::abs(end) - std::abs(start) < 0 ){
+  if( std::abs(std::fmod(end - start, step)) > ERROR_BOUND || std::abs(end) - std::abs(start) < 0 ){
     std::cout << BIRED;
     std::cout << "WARNING: infinite loop";
     std::cout << RESET;
